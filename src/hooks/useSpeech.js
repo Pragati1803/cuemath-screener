@@ -8,20 +8,33 @@ export function useSpeech() {
   const speak = useCallback((text, onEnd) => {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.88;
-    utterance.pitch = 1.1;
-    utterance.volume = 1;
+    // Soft, warm, natural settings
+    utterance.rate = 0.82;    // slower = more natural, easier to follow
+    utterance.pitch = 1.0;    // neutral pitch sounds more human
+    utterance.volume = 0.92;  // slightly below max = softer feel
 
     const doSpeak = () => {
       const voices = window.speechSynthesis.getVoices();
-      const preferred = ['Samantha', 'Karen', 'Moira', 'Google US English', 'Google UK English Female', 'Microsoft Zira', 'Microsoft Jenny'];
+      // Priority: warm, natural-sounding female voices
+      const preferred = [
+        'Samantha',                   // macOS — warm and clear
+        'Karen',                      // macOS Australian — soft
+        'Moira',                      // macOS Irish — gentle
+        'Google UK English Female',   // Chrome — soft British
+        'Google US English',          // Chrome fallback
+        'Microsoft Jenny Online',     // Windows — very natural
+        'Microsoft Aria Online',      // Windows — warm
+        'Microsoft Zira',             // Windows fallback
+      ];
       let voice = null;
       for (const name of preferred) {
         voice = voices.find(v => v.name.includes(name));
         if (voice) break;
       }
+      // Final fallback: any en-US voice
       if (!voice) voice = voices.find(v => v.lang === 'en-US') || voices.find(v => v.lang.startsWith('en'));
       if (voice) utterance.voice = voice;
+
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => { setIsSpeaking(false); if (onEnd) onEnd(); };
       utterance.onerror = () => { setIsSpeaking(false); if (onEnd) onEnd(); };
